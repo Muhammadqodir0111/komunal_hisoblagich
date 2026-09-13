@@ -14,17 +14,21 @@ Uy-joy boshqarmasi abonentlardan har oy hisoblagich ko'rsatkichini yig'adi. Abon
 - JWT autentifikatsiya (djangorestframework-simplejwt)
 - django-filter (filtrlash)
 - Pillow (rasm bilan ishlash)
+- Celery + Redis (Memurai) — avtomatik eslatmalar
+- django-celery-beat — vazifalar jadvali
+- django-silk — API tezligini monitoring qilish
 
 ## Loyiha strukturasi
 
 ```
 kommunal_hisoblagich/
-    config/          - loyiha sozlamalari (settings, urls)
+    config/          - loyiha sozlamalari (settings, urls, celery)
     users/           - foydalanuvchi modeli va rollar
     subscribers/     - abonent, xizmat turi, hisoblagich
     billing/         - tarif, ko'rsatkich, hisob
-    bot/             - Telegram bot (aiogram)
+    bot/             - Telegram bot (aiogram) va Celery vazifalari
     media/           - yuklangan suratlar
+    staticfiles/     - collectstatic natijasi
     manage.py
     requirements.txt
     .env.example
@@ -67,7 +71,11 @@ pip install -r requirements.txt
 CREATE DATABASE kommunal_db;
 ```
 
-### 5. `.env` faylini sozlash
+### 5. Redis (Memurai) o'rnatish
+
+Windows uchun Memurai — Redis'ning Windows versiyasi. O'rnatgach, Windows Services orqali ishlab turganini tekshiring.
+
+### 6. `.env` faylini sozlash
 
 `.env.example` faylidan nusxa olib `.env` nomi bilan saqlang, so'ng qiymatlarni to'ldiring:
 
@@ -85,14 +93,14 @@ BOT_API_USERNAME=your-username
 BOT_API_PASSWORD=your-password
 ```
 
-### 6. Migratsiya
+### 7. Migratsiya
 
 ```
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-### 7. Superuser yaratish
+### 8. Superuser yaratish
 
 ```
 python manage.py createsuperuser
@@ -100,7 +108,13 @@ python manage.py createsuperuser
 
 (Username, Phone va Password so'raladi)
 
-### 8. Django serverni ishga tushirish
+### 9. Static fayllarni yig'ish
+
+```
+python manage.py collectstatic
+```
+
+### 10. Django serverni ishga tushirish
 
 ```
 python manage.py runserver
@@ -108,15 +122,26 @@ python manage.py runserver
 
 Server: `http://127.0.0.1:8000/`
 Admin panel: `http://127.0.0.1:8000/admin/`
+Silk monitoring: `http://127.0.0.1:8000/silk/`
 
-### 9. Telegram botni ishga tushirish (alohida terminalda)
+### 11. Telegram botni ishga tushirish (alohida terminalda)
 
 ```
 venv\Scripts\activate
 python -m bot.main
 ```
 
-**Eslatma:** Django server va bot bir vaqtda, ikkita alohida terminalda ishlashi kerak.
+### 12. Celery worker va beat ishga tushirish (ikkita alohida terminalda)
+
+```
+celery -A config worker -l info --pool=solo
+```
+
+```
+celery -A config beat -l info
+```
+
+**Eslatma:** Django server, bot, Celery worker va Celery beat — barchasi bir vaqtda, alohida terminallarda ishlab turishi kerak.
 
 ## Boshlang'ich ma'lumotlarni kiritish
 
@@ -126,6 +151,7 @@ Admin panel orqali quyidagilarni kiriting:
 2. **Subscribers** — abonentlar (hisob raqami, F.I.SH, manzil)
 3. **Meters** — abonentlarga hisoblagich biriktirish
 4. **Tariffs** — har bir xizmat turi uchun narx (`valid_from` sanasi bilan)
+5. **Periodic Tasks** — avtomatik eslatmalar uchun Crontab va Periodic Task yaratish (20-kun, 25-kun, 5-kun)
 
 ## API endpointlar
 
@@ -151,6 +177,8 @@ Admin panel orqali quyidagilarni kiriting:
 | GET | `/api/reports/debtors/` | Admin | Qarzdorlar ro'yxati |
 | GET | `/api/reports/monthly/?period=2026-08` | Admin | Oylik yig'im hisoboti |
 
+**Eslatma:** `/api/readings/` (POST) faqat sozlangan kunlar oralig'ida (standart: oyning 20-25 kunlari, `settings.py`dagi `READING_SUBMISSION_DAY_START/END` orqali sozlanadi) ochiq bo'ladi.
+
 ## Telegram bot buyruqlari
 
 - `/start` — ro'yxatdan o'tish, hisob raqami orqali akkauntni bog'lash
@@ -164,6 +192,14 @@ Admin panel orqali quyidagilarni kiriting:
 ### Nazoratchi tugmalari
 - **Tekshirilmagan ko'rsatkichlar** — tasdiqlash yoki rad etish
 
+## Avtomatik eslatmalar (Celery)
+
+- Har oyning 20-kunida — ko'rsatkich yubormaganlarga eslatma
+- Har oyning 25-kunida — takroriy eslatma
+- Har oyning 5-kunida — qarzi bor abonentlarga ogohlantirish
+
+Vazifalar `bot/tasks.py`da yozilgan, Django admin panelning **Periodic Tasks** bo'limi orqali jadval bo'yicha ishga tushiriladi.
+
 ## Rollar va huquqlar
 
 | Rol | Huquqlari |
@@ -174,8 +210,8 @@ Admin panel orqali quyidagilarni kiriting:
 
 ## Biznes qoidalar
 
-- Sarf = joriy ko'rsatkich − oldingi tasdiqlangan ko'rsatkich (birinchi oyda `Meter.initial_value`dan hisoblanadi)
-- Summa = sarf × ko'rsatkich davriga mos keladigan tarif narxi
+- Sarf = joriy ko'rsatkich - oldingi tasdiqlangan ko'rsatkich (birinchi oyda `Meter.initial_value`dan hisoblanadi)
+- Summa = sarf x ko'rsatkich davriga mos keladigan tarif narxi
 - Hisob faqat tasdiqlangan ko'rsatkich uchun chiqadi
 - Bir davrga bitta hisob (`Reading` bilan `OneToOne`)
 - Tarif o'zgarsa eski hisoblar qayta hisoblanmaydi — narx nusxasi saqlanadi
@@ -191,6 +227,10 @@ Admin panel orqali quyidagilarni kiriting:
 - **Reading** — oylik ko'rsatkich va surat, `unique_together (meter, period)`
 - **Invoice** — hisob, `reading`ga OneToOne, narx nusxasi bilan
 
+## API dokumentatsiyasi
+
+To'liq Postman kolleksiyasi (18 ta so'rov, har biri tavsif bilan) loyiha ichida saqlangan — Postman'ga import qilib ishlatish mumkin.
+
 ## Muallif
 
-IT Shaharcha o'quv markazi — Mustaqil loyiha № 8
+IT Shaharcha o'quv markazi — Mustaqil loyiha No 8
