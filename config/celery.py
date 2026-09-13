@@ -1,3 +1,5 @@
+# Celery konfiguratsiyasi - fon vazifalari uchun
+
 import os
 from celery import Celery
 
