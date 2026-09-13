@@ -1,3 +1,4 @@
+# Avtomatik eslatma va ogohlantirish vazifalari
 from celery import shared_task
 import asyncio
 from datetime import datetime
