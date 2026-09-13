@@ -1,3 +1,5 @@
+# Abonent, xizmat turi va hisoblagich modellari
+
 from django.db import models
 from django.conf import settings
 
