@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
+    'django_celery_beat',
     'rest_framework_simplejwt',
     'django_filters',
 
@@ -33,6 +34,7 @@ INSTALLED_APPS = [
     'subscribers',
     'billing',
     'bot',
+    'silk',
 ]
 
 MIDDLEWARE = [
@@ -42,8 +44,12 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',    
+    'silk.middleware.SilkyMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+
 ]
+
 
 ROOT_URLCONF = 'config.urls'
 
@@ -141,6 +147,14 @@ STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Tashkent'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
@@ -150,3 +164,11 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+
+
+SILKY_PYTHON_PROFILER = True
+
+READING_SUBMISSION_DAY_START = 1
+READING_SUBMISSION_DAY_END = 31
+
+STATIC_ROOT = BASE_DIR / 'staticfiles'
