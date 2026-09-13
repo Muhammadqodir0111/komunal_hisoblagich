@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from django.db import models
+from django.conf import settings
+from datetime import date
 from .models import Tariff, Reading, Invoice
 
 
@@ -26,6 +28,15 @@ class ReadingSerializer(serializers.ModelSerializer):
         read_only_fields = ['status', 'reject_reason', 'submitted_by', 'reviewed_by']
 
     def validate(self, data):
+        today = date.today().day
+        start = settings.READING_SUBMISSION_DAY_START
+        end = settings.READING_SUBMISSION_DAY_END
+
+        if not (start <= today <= end):
+            raise serializers.ValidationError(
+                f"Ko'rsatkich faqat oyning {start}-{end} kunlari orasida qabul qilinadi"
+            )
+
         meter = data['meter']
         value = data['value']
 
