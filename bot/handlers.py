@@ -1,10 +1,12 @@
+# Botning barcha xabar va callback handlerlari shu yerda
+
 from pathlib import Path
 from aiogram.types import FSInputFile
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
-from datetime import datetime
+from datetime import datetime 
 
 from .api_client import api_client
 from .states import ReadingStates, RejectStates
