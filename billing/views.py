@@ -162,9 +162,13 @@ class ReadingViewSet(viewsets.ModelViewSet):
 class InvoiceViewSet(viewsets.ModelViewSet):
     queryset = Invoice.objects.all()
     serializer_class = InvoiceSerializer
-    permission_classes = [IsAdmin]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['period', 'is_paid', 'subscriber']
+
+    def get_permissions(self):
+        if self.action == 'my_invoices':
+            return [IsAuthenticated()]
+        return [IsAdmin()]
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -212,7 +216,6 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             'message': 'To\'lov qayd etildi',
             'data': self.get_serializer(invoice).data
         })
-
 
 class DebtorsReportView(APIView):
     permission_classes = [IsAdmin]
