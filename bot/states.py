@@ -1,3 +1,5 @@
+# FSM holatlari - foydalanuvchi qaysi bosqichda ekanini saqlaydi
+
 from aiogram.fsm.state import State, StatesGroup
 
 
