@@ -1,3 +1,5 @@
+# Tarif, ko'rsatkich va hisob modellari - loyihaning yuragi
+
 from django.db import models
 from django.conf import settings
 from subscribers.models import Subscriber, Meter, ServiceType
