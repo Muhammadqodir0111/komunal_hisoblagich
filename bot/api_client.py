@@ -1,3 +1,5 @@
+# Django API bilan aloqa qiluvchi klass - barcha HTTP so'rovlar shu yerda
+
 import aiohttp
 from .bot_config import API_BASE_URL
 
