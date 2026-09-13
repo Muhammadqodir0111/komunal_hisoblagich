@@ -1,3 +1,6 @@
+# Bot uchun barcha tugmalar shu yerda joylashgan
+
+
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 
 
