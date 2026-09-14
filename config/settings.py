@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'billing',
     'bot',
     'silk',
+    'jazzmin',
 ]
 
 MIDDLEWARE = [
@@ -172,3 +173,28 @@ READING_SUBMISSION_DAY_START = 1
 READING_SUBMISSION_DAY_END = 31
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+
+JAZZMIN_SETTINGS = {
+    "site_title": "Kommunal Hisoblagich",
+    "site_header": "Kommunal Hisoblagich",
+    "site_brand": "Kommunal Hisoblagich",
+    "welcome_sign": "Boshqaruv paneliga xush kelibsiz",
+    "copyright": "Kommunal Hisoblagich",
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "icons": {
+        "auth.Group": "fas fa-users-cog",
+        "users.User": "fas fa-user",
+        "subscribers.Subscriber": "fas fa-id-card",
+        "subscribers.ServiceType": "fas fa-water",
+        "subscribers.Meter": "fas fa-tachometer-alt",
+        "billing.Tariff": "fas fa-money-bill-wave",
+        "billing.Reading": "fas fa-file-invoice",
+        "billing.Invoice": "fas fa-receipt",
+    },
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "theme": "flatly",
+}
