@@ -67,7 +67,13 @@ class ReadingViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='my')
     def my_readings(self, request):
-        subscriber = getattr(request.user, 'subscriber', None)
+        subscriber_id = request.query_params.get('subscriber')
+        if subscriber_id:
+            from subscribers.models import Subscriber
+            subscriber = Subscriber.objects.filter(id=subscriber_id).first()
+        else:
+            subscriber = getattr(request.user, 'subscriber', None)
+
         if not subscriber:
             return Response({
                 'success': False,
@@ -181,12 +187,18 @@ class InvoiceViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='my')
     def my_invoices(self, request):
-        subscriber = getattr(request.user, 'subscriber', None)
+        subscriber_id = request.query_params.get('subscriber')
+        if subscriber_id:
+            from subscribers.models import Subscriber
+            subscriber = Subscriber.objects.filter(id=subscriber_id).first()
+        else:
+            subscriber = getattr(request.user, 'subscriber', None)
+
         if not subscriber:
             return Response({
                 'success': False,
                 'message': 'Sizga bog\'langan abonent topilmadi',
-                'data': []
+                'data': {'invoices': [], 'total_debt': 0}
             })
 
         invoices = Invoice.objects.filter(subscriber=subscriber).order_by('-period')[:6]
@@ -216,6 +228,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             'message': 'To\'lov qayd etildi',
             'data': self.get_serializer(invoice).data
         })
+
 
 class DebtorsReportView(APIView):
     permission_classes = [IsAdmin]

@@ -87,10 +87,10 @@ class ApiClient:
             ) as resp:
                 return await resp.json()
 
-    async def get_my_invoices(self):
+    async def get_my_invoices(self, subscriber_id):
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                f"{self.base_url}/invoices/my/",
+                f"{self.base_url}/invoices/my/?subscriber={subscriber_id}",
                 headers=self.headers()
             ) as resp:
                 return await resp.json()

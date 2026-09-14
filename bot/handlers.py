@@ -180,10 +180,14 @@ async def send_reading(callback: CallbackQuery, state: FSMContext, bot):
             reply_markup=main_menu_keyboard()
         )
 
-
 @router.message(F.text == "Mening hisoblarim")
 async def my_invoices(message: Message):
-    result = await api_client.get_my_invoices()
+    subscriber_id = user_subscribers.get(message.from_user.id)
+    if not subscriber_id:
+        await message.answer("Avval /start bosing.")
+        return
+
+    result = await api_client.get_my_invoices(subscriber_id)
     data = result.get('data', {})
     invoices = data.get('invoices', [])
 
@@ -201,7 +205,12 @@ async def my_invoices(message: Message):
 
 @router.message(F.text == "Qarzim")
 async def my_debt(message: Message):
-    result = await api_client.get_my_invoices()
+    subscriber_id = user_subscribers.get(message.from_user.id)
+    if not subscriber_id:
+        await message.answer("Avval /start bosing.")
+        return
+
+    result = await api_client.get_my_invoices(subscriber_id)
     data = result.get('data', {})
     debt = data.get('total_debt', 0)
 
